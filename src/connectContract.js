@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 let contract;
 const connectContract = async () => {
-     const Address = "0x563Ce42F745D27e538b47b0484e2661C6aa2a13F";
+     const Address = "0x4d260c4fE4C6561a5A9aebc039Bbd0Ccf541bF3f";
      const Abi = [
           {
                "inputs": [],

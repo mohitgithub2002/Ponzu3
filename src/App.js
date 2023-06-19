@@ -60,7 +60,7 @@ function App() {
     if (isConnected) {
       contractBalance();
     }
-  },[isConnected,chainId,txDone])
+  },[isConnected,chainId,txDone,address])
   
 
 
@@ -245,7 +245,7 @@ function App() {
     if(isConnected){
       getUserTokens();
     }
-  },[isConnected,chainId,txDone])
+  },[isConnected,chainId,txDone, address])
 
   return (
     <div className="App">
