@@ -27,8 +27,8 @@ function App() {
   
   const { address, isConnected,isConnecting, isDisconnected } = useAccount()
   const { isOpen, open, close, setDefaultChain } = useWeb3Modal()
-  const [value1, setValue1] = useState();
-  const [value2, setValue2] = useState();
+  const [value1, setValue1] = useState(0);
+  const [value2, setValue2] = useState(0);
   const [totalEth, setTotalEth] = useState(0);
   const [chainId, setChainId] = useState();
   const [txnLoading, setTxnLoading] = useState(false);
@@ -89,12 +89,15 @@ function App() {
     try {
 
          token =  await contract.swapConvert((totalEth.toString()),(ethers.utils.parseEther(value1)));
-         
+         setValue2(token/10**18);
         
     }catch (error) {
          console.log("error : ", error);
+         setValue2(0);
     }
-    setValue2(token/10**18);
+    
+    
+    
   }
   
   
@@ -104,10 +107,12 @@ function App() {
     let eth;
     try{
       eth = await contract.swapBackConvert(ethers.utils.parseEther(value1))
+      setValue2(eth/10**18);
     }catch(error){
       console.log("error : ", error);
+      setValue2(0);
     }
-    setValue2(eth/10**18);
+    
   }
 
   useEffect(()=>{
@@ -119,14 +124,20 @@ function App() {
         swapBackConvert();
       }
     }
+    
   },[value1])
 
 
   //handle the value for input 1
   function handleValue1(event){
     const newValue = event.target.value;
-    setTxDone(!txDone);
+    
     setValue1(newValue);
+    if(isNaN(value2)){
+      console.log("value2 :  yes");
+      setValue2(0);
+    }
+
   }
 
   //handle the revert button between eth and tokens
