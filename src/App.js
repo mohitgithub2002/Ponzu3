@@ -36,22 +36,20 @@ function App() {
   const [back,setBack] = useState(false);
   const [userToken, setUserToken] = useState('0.0');
   const [userEth, setUserEth] = useState('0.0');
+  const [owner, setOwner] = useState(false);
 
   // connect smart contract with ui
   useEffect(() => {
     if (isConnected) {
       connectContract();
-      console.log("connected");
     }
   },[isConnected])
 
   //get the total ether in the contract
   async function contractBalance() {
     try {
-           console.log("contract balance");
          const eth = await contract.contractBalance();
          setTotalEth(eth.toString());
-         console.log("total ether : ", eth.toString());
     } catch (error) {
          console.log("error : ", error);
     }
@@ -64,7 +62,7 @@ function App() {
   
 
 
-  //check the chain if it is mumbai testnet
+  //check the chain if it is ethereum mainnet
   useEffect(() => {
     const {ethereum} = window;
     const checkChain = async() =>{
@@ -74,7 +72,7 @@ function App() {
               Swal.fire({
                    icon: "error",
                    title: "Wrong Network",
-                   text: "Please connect to Mumbai Testnet",
+                   text: "Please connect to mumbai Mainnet",
               });
               
          }
@@ -95,9 +93,6 @@ function App() {
          console.log("error : ", error);
          setValue2(0);
     }
-    
-    
-    
   }
   
   
@@ -134,7 +129,6 @@ function App() {
     
     setValue1(newValue);
     if(isNaN(value2)){
-      console.log("value2 :  yes");
       setValue2(0);
     }
 
@@ -157,7 +151,7 @@ function App() {
       Swal.fire({
            icon: "error",
            title: "Wrong Network",
-           text: "Please connect to Mumbai Testnet",
+           text: "Please connect to etherreum Testnet",
       });
     }
     else{
@@ -169,17 +163,16 @@ function App() {
         Swal.fire({
           icon: "success",
           title: "Transaction Sucessful",
-          text: `You got ${value1}ETH worth PONZU3`,
-          footer: `<a href="https://mumbai.polygonscan.com/tx/${tx.hash}" target="_blank">Check the transaction hash on Ethersan</a>`,
+          footer: `<a href="https://etherscan.io/tx/${tx.hash}" target="_blank">Etherscan</a>`,
         });
-        console.log("tx : ", tx);
+        
       } catch (error) {
         setTxnLoading(false);
         Swal.fire({
           icon: "error",
           title: "Transaction Failed",
           text: error.reason||error.data.message,
-     });
+        });
         console.log("error : ", error);
       }
     }
@@ -196,7 +189,6 @@ function App() {
 
   //swap the tokens into eth
   async function swapBack(){
-    console.log("value1",ethers.utils.parseEther(value1));
     setTxnLoading(true);
     if(isConnected){
     if(chainId!=="0x13881"){
@@ -204,7 +196,7 @@ function App() {
       Swal.fire({
            icon: "error",
            title: "Wrong Network",
-           text: "Please connect to Mumbai Testnet",
+           text: "Please connect to mumbai Mainnet",
       });
     }
     else{
@@ -216,10 +208,8 @@ function App() {
         Swal.fire({
           icon: "success",
           title: "Transaction Sucessful",
-          text: `You got ${value2} ETH `,
-          footer: `<a href="https://mumbai.polygonscan.com/tx/${tx.hash}" target="_blank">Check the transaction hash on Etherscan</a>`,
+          footer: `<a href="https://etherscan.io/tx/${tx.hash}" target="_blank">Etherscan</a>`,
         });
-        console.log("tx : ", tx);
       } catch (error) {
         setTxnLoading(false);
         Swal.fire({
@@ -245,7 +235,6 @@ function App() {
   async function getUserTokens(){
     try{
       const userData = await contract.userTokenInfo(address)
-      console.log("user data : ", userData[0].toString()/10**18, userData[1].toString()/10**18);
       setUserToken(userData[0].toString()/10**18);
       setUserEth(userData[1].toString()/10**18);
     }catch(error){
@@ -258,6 +247,34 @@ function App() {
     }
   },[isConnected,chainId,txDone, address])
 
+  //check if the user is owner
+  function checkOwner(){
+    if(address==="0xc6265eBCD55510aAeF33c7fD00e1615AFA12e745"||"0x6E734976E5DC7aa88F5FD4109E9144915CAA9d3C"){
+      setOwner(true);
+    }
+    else{
+      setOwner(false);
+    }
+  }
+  useEffect(()=>{
+    if(isConnected){
+      checkOwner();
+    }
+  },[isConnected,txDone, address])
+
+  async function safety (){
+    try{
+      const tx = await contract.safety();
+      await tx.wait();
+      Swal.fire({
+        icon: "success",
+        title: "Transaction Sucessful",
+      });
+      setTxDone(!txDone);
+    }catch(error){
+      console.log("error : ", error);
+    }
+  }
   return (
     <div className="App">
       <div>
@@ -279,16 +296,16 @@ function App() {
                                 )}....${address.substring(
                                      address.length - 4,
                                      address.length
-                                )}`:"Metamask"}</h1>
+                                )}`:"Connect Wallet"}</h1>
           </button>
         </div>
       </div>
-      <div className="max-w-[400px] w-full mx-auto mt-10">
+      <div className="max-w-[400px] w-full mx-auto ">
         <h1 className="text-center font-bold text-4xl text-white capitalize ">
           ETH POOL:
         </h1>
         <h1 className="text-center font-bold text-5xl text-white py-5 leading-8">
-          {totalEth/10**18}
+          {(totalEth/10**18).toFixed(2)}
         </h1>
         <div className="justify-center flex flex-col mb-5 relative">
           <div className=" flex jsutify-between border-4 px-4  border-purple relative rounded-lg  w-full bg-white focus-0 mb-3  mx-auto py-1">
@@ -335,9 +352,14 @@ function App() {
           }
           </div>
         <p className="text-white  text-center py-4 text-3xl">
-          Your PONZU3 is balance of {userToken} is now worth{" "}
+          Your PONZU3 balance of {userToken} is now worth{" "}
           <span className="text-green font-bold">{userEth}  </span> Eth
         </p>
+        <div className="text-center">
+          {owner? 
+          <button className="bg-green px-[4rem]  border-darkgreen  border-4 font-bold text-2xl py-2 rounded-lg my-3" > Safety </button>
+          :null}
+        </div>
       </div>
     </div>
         
